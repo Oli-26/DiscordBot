@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import asyncio
 import random
 from logs import record
-from permissions import permission_level, add_user, get_info, change_permission
+from permissions import permission_level, add_user, get_info, change_permission, find_id_by_name
 from encryption import encrypt, decrypt
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -28,19 +28,27 @@ async def on_ready():
 @client.event
 async def on_message(message):
     '''
-        This function handles all messages sent by users.
+        This function handles all messages sent by users. 
+        First, the users permissions are determined.
+        Next, the list of commands are run through and matched to the sent message.
     '''
+    
+    # We want to ignore messages sent by the bot itself.
     if message.author == client.user:
         return
-    level = permission_level(message.author.name)
     
+    # Here the permissions of the user are determined. -1 indicates the user does not exist.    
+    level = permission_level(message.author.id)
+
     #If user does not exist, add them to permissions file
     if(level == -1):
-        add_user({'name':message.author.name, 'level':0})
+        add_user({'name':message.author.name, 'level':0, 'id':message.author.id})
   
+    # Following are all the commands.
     if message.content == '!version':
         await message.channel.send(version)
         return
+        
     if message.content.startswith('!roll', 0, 5):
         min = 0
         max = 0
@@ -66,8 +74,7 @@ async def on_message(message):
         await message.channel.send(str(rand))
         record('roll by ' + message.author.name + '. Result = ' + str(rand))
         return
-        
-            
+                    
     if message.content.startswith('!raffle', 0, 7):
         try:
             print(message.content[8:])
@@ -92,32 +99,32 @@ async def on_message(message):
             choice = random.choice(bot_data.util_list)
             await message.channel.send('Raffle finished, congratulations ' + choice + '!')
             record("Raffle finished: winner = " + choice)
-        
-        
+          
     if message.content == "!apply" and bot_data.event_active == True and bot_data.event_name == "raffle":
         print(message.author.name + ' applied to raffle.')
         if(not message.author.name in bot_data.util_list):
             bot_data.util_list.append(message.author.name)
-    if message.content.startswith('!perm', 0, 5) and level == 1:
-        if(len(message.content) == 5):
-            if level == 1:
-                await message.channel.send(message.author.name + ' is an admin')
-            if level == 0:
-                await message.channel.send(message.author.name + ' is a user')
-        else:
-            try:
+            
+    if message.content.startswith('!perm', 0, 5) and level >= 1:
+        try:
+            l = 0
+            search_name = ''
+            if(len(message.content) != 5):
                 search_name = message.content[6:]
-                l = permission_level(search_name)
-                if l == 2:
-                    await message.channel.send(search_name + ' is a God')
-                if l == 1:
-                    await message.channel.send(search_name + ' is an admin')
-                if l == 0:
-                    await message.channel.send(search_name + ' is a user')
-                if l == -1:
-                    await message.channel.send(search_name + ' does not exist')
-            except:
-                print("search for permissions failed")
+                l = permission_level(find_id_by_name(search_name))
+            else:
+                search_name = message.author.name
+                l = level 
+            if l == 2:
+                await message.channel.send(search_name + ' is an admin')
+            if l == 1:
+                await message.channel.send(search_name + ' is a moderator')
+            if l == 0:
+                await message.channel.send(search_name + ' is a user')
+            if l == -1:
+                await message.channel.send(search_name + ' does not exist')
+        except:
+            print("search for permissions failed")
     
     if message.content.startswith('!setPermissions', 0, 15) and level >= 1:
         try:
@@ -127,8 +134,8 @@ async def on_message(message):
                 search_name = search_name + message.content[i] 
                 i = i + 1
             perms_arg = int(message.content[i+1:])
-            if(perms_arg == 0 or perms_arg == 1):
-                temp_dict = get_info(search_name)
+            if((perms_arg == 0 or perms_arg == 1 or perms_arg == 2) and level >= perms_arg):
+                temp_dict = get_info(find_id_by_name(search_name))
                 old_level = temp_dict['level']
                 temp_dict['level'] = perms_arg
                 change_permission(temp_dict)

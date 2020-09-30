@@ -33,6 +33,4 @@ def write_dict_to_file(dict, file_name):
     except:
         print('saving dictionary to file failed.')
 
-#write_dict_to_file({'name':'BigBoiBot', 'level':2}, 'logs/permissions.txt') 
-#write_dict_to_file({'name':'Oli26', 'level':1}, 'logs/permissions.txt') 
-#write_dict_to_file({'name':'test', 'level':0}, 'logs/permissions.txt')     
+   
