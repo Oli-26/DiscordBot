@@ -1,0 +1,7 @@
+2020-09-29 21:55:56 || roll by Oli26. Result = 14
+2020-09-29 21:58:48 || roll by Oli26. Result = 27
+2020-09-29 22:19:44 || roll by Oli26. Result = 52
+2020-09-29 22:32:14 || roll by Oli26. Result = 42
+2020-09-29 23:42:09 || Nubasaurus permission level changed from 0 to 0
+2020-09-29 23:42:25 || Raffle called with length of 10
+2020-09-29 23:42:35 || Raffle finished: winner = Oli26
